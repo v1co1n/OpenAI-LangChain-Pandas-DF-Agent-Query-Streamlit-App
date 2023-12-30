@@ -1,17 +1,32 @@
 # Imports
 import streamlit as st
 import pandas as pd
+from openai import OpenAI as OA
+from PIL import Image
 from dotenv import load_dotenv
-from langchain.agents import create_pandas_dataframe_agent
+from langchain_experimental.agents import create_pandas_dataframe_agent
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
 from langchain.agents.agent_types import AgentType
 from html_templates import css, user_template, bot_template
 
 
+def openai_image(prompt):
+    client = OA()
+    response = client.images.generate(
+        model="dall-e-3",
+        prompt=prompt,
+        size="1024x1024",
+        quality="standard",
+        n=1,
+    )
+    image_url = response.data[0].url
+    return image_url
+
+
 def main():
-    st.set_page_config(page_title="Pandas Agent")
-    st.subheader("OpenAI LangChain Pandas Agent Chatbot")
+    st.set_page_config(page_title="OpenAI generating charts based on CSV")
+    st.subheader("OpenAI chatgpt->dall-e-3 agent")
     st.write("Upload a CSV or XLSX file and query answers from your data.")
 
     # Apply CSS
@@ -63,15 +78,17 @@ def main():
 
                 # Get answer from agent
                 answer = agent.run(prompt)
-
+                answer = openai_image(answer)
                 # Store conversation
-                st.session_state.chat_history.append(f"USER: {query}")
-                st.session_state.chat_history.append(f"AI: {answer}")
+                #st.session_state.chat_history.append(f"USER: {query}")
+                #st.session_state.chat_history.append(f"AI: {answer}")
 
                 # Display conversation in reverse order
-                for i, message in enumerate(reversed(st.session_state.chat_history)):
-                    if i % 2 == 0: st.markdown(bot_template.replace("{{MSG}}", message), unsafe_allow_html=True)
-                    else: st.markdown(user_template.replace("{{MSG}}", message), unsafe_allow_html=True)
+                #for i, message in enumerate(reversed(st.session_state.chat_history)):
+                #   if i % 2 == 0: st.markdown(bot_template.replace("{{MSG}}", message), unsafe_allow_html=True)
+                #    else: st.markdown(user_template.replace("{{MSG}}", message), unsafe_allow_html=True)
+                
+                st.image(answer)
 
             # Error Handling
             except Exception as e:
